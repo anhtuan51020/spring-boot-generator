@@ -1,0 +1,69 @@
+package {{ j2_base_package }}.config;
+
+import {{ j2_base_package }}.filter.TraceIdFilter;
+import {{ j2_base_package }}.security.CustomAuthenticationEntryPoint;
+import {{ j2_base_package }}.filter.SsoAuthenticationFilter;
+import {{ j2_base_package }}.security.SsoAuthenticationProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
+
+import static {{ j2_base_package }}.common.constants.SecurityConstants.PUBLIC_PATHS;
+
+/**
+ * Cấu hình Spring Security.
+
+ */
+@Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final SsoAuthenticationProvider ssoAuthenticationProvider;
+    private final CustomAuthenticationEntryPoint customEntryPoint;
+    private final CorsFilter corsFilter;
+    private final TraceIdFilter traceIdFilter;
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(List.of(ssoAuthenticationProvider));
+    }
+
+    @Bean
+    public SecurityFilterChain publicSecurityFilterChain(
+            HttpSecurity http,
+            SsoAuthenticationFilter ssoAuthenticationFilter
+    ) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_PATHS.toArray(new String[0])).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(customEntryPoint))
+                .authenticationProvider(ssoAuthenticationProvider)
+                .addFilterBefore(traceIdFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(ssoAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public SsoAuthenticationFilter ssoAuthenticationFilter(AuthenticationManager authenticationManager) {
+        return new SsoAuthenticationFilter(authenticationManager, customEntryPoint);
+    }
+}

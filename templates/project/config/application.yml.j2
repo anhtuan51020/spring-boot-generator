@@ -2,20 +2,20 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   application:
-    name: {{ project_name }}
+    name: {{ j2_project_name }}
   datasource:
     jdbc-url: {{
-                'jdbc:postgresql://localhost:5432/' + (project_name | replace('-', '_'))
-                if database_type == 'postgresql' else
-                'jdbc:mysql://localhost:3306/' + (project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
-                if database_type == 'mysql' else
-                'jdbc:mariadb://localhost:3306/' + (project_name | replace('-', '_'))
+                'jdbc:postgresql://localhost:5432/' + (j2_project_name | replace('-', '_'))
+                if j2_database_type == 'postgresql' else
+                'jdbc:mysql://localhost:3306/' + (j2_project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
+                if j2_database_type == 'mysql' else
+                'jdbc:mariadb://localhost:3306/' + (j2_project_name | replace('-', '_'))
             }}
-    username: ${SPRING_DATASOURCE_USERNAME:{{ 'postgres' if database_type == 'postgresql' else 'root' }}}
-    password: ${SPRING_DATASOURCE_PASSWORD:{{ 'postgres' if database_type == 'postgresql' else 'root' }}}
+    username: ${SPRING_DATASOURCE_USERNAME:{{ 'postgres' if j2_database_type == 'postgresql' else 'root' }}}
+    password: ${SPRING_DATASOURCE_PASSWORD:{{ 'postgres' if j2_database_type == 'postgresql' else 'root' }}}
     driver-class-name: {{
-                'org.postgresql.Driver' if database_type == 'postgresql' else
-                'com.mysql.cj.jdbc.Driver' if database_type == 'mysql' else
+                'org.postgresql.Driver' if j2_database_type == 'postgresql' else
+                'com.mysql.cj.jdbc.Driver' if j2_database_type == 'mysql' else
                 'org.mariadb.jdbc.Driver'
             }}
     hikari:
@@ -74,7 +74,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: ${LOG_FILE:logs/{{ project_name }}.log}
+    name: ${LOG_FILE:logs/{{ j2_project_name }}.log}
     max-size: 10MB
     max-history: 30
 
@@ -133,7 +133,7 @@ app:
   sso:
     url: ${SSO_URL:http://localhost:8080/auth}
     realm: ${SSO_REALM:master}
-    client-id: ${SSO_CLIENT_ID:{{ project_name }}}
+    client-id: ${SSO_CLIENT_ID:{{ j2_project_name }}}
   database:
     batch-size: 1000
     max-batch-size: 10000

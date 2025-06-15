@@ -33,8 +33,7 @@ def render_template_file(template_path, context, output_path, verbose: bool = Fa
             typer.echo(f"[✔] Đã tạo file: {output_path_abs}")
 
 def generate_project_structure_from_templates(context: dict, verbose: bool = False):
-    project_name = context["project_name"]
-    context["project_name"] = project_name
+    project_name = context["j2_project_name"]
 
     template_base = Path(__file__).parent.parent / "templates" / "project"
     output_base = Path(project_name)

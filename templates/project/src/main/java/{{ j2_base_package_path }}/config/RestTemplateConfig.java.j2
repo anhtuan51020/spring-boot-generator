@@ -1,0 +1,46 @@
+package {{ j2_base_package }}.config;
+
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class RestTemplateConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        // 1. Quản lý kết nối HTTP, pool connection tái sử dụng
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+
+        // 2. Cấu hình timeout cho socket (tương đương timeout đọc dữ liệu từ socket)
+        SocketConfig socketConfig = SocketConfig.custom()
+                .setSoTimeout(Timeout.ofSeconds(5))  // Thời gian chờ tối đa để nhận dữ liệu trên socket
+                .build();
+        connectionManager.setDefaultSocketConfig(socketConfig);
+
+        // 3. Cấu hình request-level timeout
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(Timeout.ofSeconds(5))  // Thời gian chờ lấy connection từ pool
+                .setResponseTimeout(Timeout.ofSeconds(5))           // Thời gian chờ server phản hồi
+                .build();
+
+        // 4. Xây dựng HttpClient với connection manager và cấu hình request
+        HttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)    // Quản lý pool connection
+                .setDefaultRequestConfig(requestConfig)     // Cấu hình timeout mặc định cho mỗi request
+                .build();
+
+        // 5. Tạo HttpRequestFactory dùng HttpClient vừa cấu hình cho RestTemplate
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+
+        // 6. Trả về RestTemplate với cấu hình tùy chỉnh
+        return new RestTemplate(factory);
+    }
+}

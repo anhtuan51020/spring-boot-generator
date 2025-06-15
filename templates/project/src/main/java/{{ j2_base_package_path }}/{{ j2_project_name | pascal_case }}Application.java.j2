@@ -1,0 +1,44 @@
+package {{ j2_base_package }};
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.core.env.Environment;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.net.InetAddress;
+
+@SpringBootApplication
+@EnableTransactionManagement
+@EnableAsync
+@EnableScheduling
+public class {{ j2_project_name | pascal_case }}Application {
+
+    public static void main(String[] args) {
+        SpringApplication app = new SpringApplication({{ j2_project_name | pascal_case }}Application.class);
+        app.addListeners((ApplicationListener<ApplicationReadyEvent>) event -> {
+            Environment env = event.getApplicationContext().getEnvironment();
+            try {
+                String protocol = "http";
+                String serverPort = env.getProperty("server.port", "8080");
+                String contextPath = env.getProperty("server.servlet.context-path", "");
+                String hostAddress = InetAddress.getLocalHost().getHostAddress();
+                String activeProfiles = String.join(", ", env.getActiveProfiles());
+
+                System.out.println("\n----------------------------------------------------------");
+                System.out.println("  🚀 {{ j2_project_name | upper }} Application is UP and RUNNING!");
+                System.out.println("  📦  Active Profiles: " + (activeProfiles.isEmpty() ? "default" : activeProfiles));
+                System.out.println("  🌐  Local:          " + protocol + "://localhost:" + serverPort + contextPath);
+                System.out.println("  🌍  External:       " + protocol + "://" + hostAddress + ":" + serverPort + contextPath);
+                System.out.println("----------------------------------------------------------\n");
+            } catch (Exception e) {
+                System.err.println("❌ Error during startup info logging: " + e.getMessage());
+            }
+        });
+
+        app.run(args);
+    }
+}

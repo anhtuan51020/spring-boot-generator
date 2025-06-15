@@ -1,0 +1,58 @@
+package {{ j2_base_package }}.common.utils;
+
+import {{ j2_base_package }}.common.responses.ApiResponseWrapper;
+import {{ j2_base_package }}.common.responses.ErrorResponse;
+import {{ j2_base_package }}.common.responses.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * Utility class để xử lý việc trả về response
+ */
+public class ResponseUtils {
+
+    /**
+     * Trả về response thành công với dữ liệu tạo mới
+     */
+    public static <T> ResponseEntity<ApiResponseWrapper<T>> insertSuccess(T data) {
+        return ResponseEntity.ok(new ApiResponseWrapper<>(
+                HttpStatus.CREATED.value(),
+                "Thành công",
+                data
+        ));
+    }
+
+    /**
+     * Trả về response thành công với dữ liệu đơn
+     */
+    public static <T> ResponseEntity<ApiResponseWrapper<T>> success(T data) {
+        return ResponseEntity.ok(new ApiResponseWrapper<>(
+                HttpStatus.OK.value(),
+                "Thành công",
+                data
+        ));
+    }
+
+    /**
+     * Trả về response thành công với dữ liệu phân trang
+     */
+    public static <T> ResponseEntity<ApiResponseWrapper<PageResponse<T>>> success(Page<T> page) {
+        PageResponse<T> pageResponse = new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+        return ResponseEntity.ok(new ApiResponseWrapper<>(
+                HttpStatus.OK.value(),
+                "Thành công",
+                pageResponse
+        ));
+    }
+
+} 

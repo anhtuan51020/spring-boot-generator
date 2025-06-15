@@ -1,0 +1,18 @@
+package {{ j2_base_package }}.service;
+
+import {{ j2_base_package }}.entity.BaseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Optional;
+
+public interface BaseService<T extends BaseEntity, ID extends Serializable, DTO> {
+    List<DTO> findAll();
+    Page<DTO> findAll(Pageable pageable);
+    Optional<DTO> findById(ID id);
+    DTO create(DTO dto);
+    Optional<DTO> update(ID id, DTO dto);
+    boolean delete(ID id);
+}

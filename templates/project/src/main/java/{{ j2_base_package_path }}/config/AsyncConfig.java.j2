@@ -1,0 +1,39 @@
+package {{ j2_base_package }}.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
+
+/**
+ * Cấu hình xử lý bất đồng bộ cho toàn bộ hệ thống.
+
+ */
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean(name = "taskExecutor")
+    public Executor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("Async-");
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "batchExecutor")
+    public Executor batchExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("BatchThread-");
+        executor.initialize();
+        return executor;
+    }
+} 

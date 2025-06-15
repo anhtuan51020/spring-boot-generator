@@ -1,0 +1,10 @@
+package {{ j2_base_package }}.service;
+
+import {{ j2_base_package }}.dto.UserDTO;
+import {{ j2_base_package }}.entity.User;
+
+import java.util.Optional;
+
+public interface UserService {
+    Optional<UserDTO> findByUsername(String username);
+}

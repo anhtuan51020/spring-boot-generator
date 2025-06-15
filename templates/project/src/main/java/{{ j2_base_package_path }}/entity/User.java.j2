@@ -1,0 +1,53 @@
+package {{ j2_base_package }}.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Entity lưu thông tin người dùng, đồng bộ với SSO
+ */
+@Data
+@Entity
+@Table(name = "tbl_user")
+@SQLRestriction("is_deleted = false")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "username", length = 50, nullable = false, unique = true)
+    @Comment("Tên đăng nhập")
+    private String username;
+
+    @Column(name = "first_name", length = 50)
+    @Comment("Tên người dùng")
+    private String firstName;
+
+    @Column(name = "last_name", length = 50)
+    @Comment("Họ, tên đệm người dùng")
+    private String lastName;
+
+    @Column(name = "email", length = 100, unique = true)
+    @Comment("Email người dùng")
+    private String email;
+
+    @Column(name = "sso_id", unique = true)
+    @Comment("ID của người dùng trên SSO")
+    private Integer ssoId;
+
+    @Column(name = "is_system", nullable = false)
+    @Comment("Là tài khoản hệ thống hay không")
+    private Boolean isSystem = false;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Comment("Đã bị xóa hay chưa")
+    private Boolean isDeleted = false;
+}

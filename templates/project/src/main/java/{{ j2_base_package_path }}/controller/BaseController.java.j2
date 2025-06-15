@@ -1,0 +1,108 @@
+package {{ j2_base_package }}.controller;
+
+import {{ j2_base_package }}.common.utils.ResponseUtils;
+import {{ j2_base_package }}.dto.BaseDTO;
+import {{ j2_base_package }}.common.responses.ApiResponseWrapper;
+import {{ j2_base_package }}.common.responses.PageResponse;
+import {{ j2_base_package }}.entity.BaseEntity;
+import {{ j2_base_package }}.service.BaseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+public abstract class BaseController<E extends BaseEntity, ID extends Serializable, DTO extends BaseDTO> {
+
+    protected abstract BaseService<E, ID, DTO> getService();
+
+    @GetMapping
+    @Operation(summary = "Lấy danh sách phân trang")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+    })
+    public ResponseEntity<ApiResponseWrapper<PageResponse<DTO>>> findAll(Pageable pageable) {
+        return ResponseUtils.success(getService().findAll(pageable));
+    }
+
+    @GetMapping("/all")
+    @Operation(summary = "Lấy tất cả")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+    })
+    public ResponseEntity<ApiResponseWrapper<List<DTO>>> findAll() {
+        return ResponseUtils.success(getService().findAll());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy theo ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy")
+    })
+    public ResponseEntity<?> findById(@PathVariable ID id) {
+        Optional<DTO> dto = getService().findById(id);
+        if (dto.isPresent()) {
+            return ResponseUtils.success(dto.get());
+        }
+        throw new EntityNotFoundException("Không tìm thấy dữ liệu với ID: " + id);
+    }
+
+    @PostMapping
+    @Operation(summary = "Thêm mới")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập")
+    })
+    public ResponseEntity<?> create(@RequestBody DTO dto) {
+        return ResponseUtils.insertSuccess(getService().create(dto));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Cập nhật")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy")
+    })
+    public ResponseEntity<?> update(@PathVariable ID id, @RequestBody DTO dto) {
+        Optional<DTO> updatedDto = getService().update(id, dto);
+        if (updatedDto.isPresent()) {
+            return ResponseUtils.success(updatedDto.get());
+        }
+        throw new EntityNotFoundException("Không tìm thấy dữ liệu với ID: " + id);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Xóa")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công"),
+            @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy")
+    })
+    public ResponseEntity<?> delete(@PathVariable ID id) {
+        if (getService().delete(id)) {
+            return ResponseUtils.success(null);
+        }
+        throw new EntityNotFoundException("Không tìm thấy dữ liệu với ID: " + id);
+    }
+}

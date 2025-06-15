@@ -1,0 +1,34 @@
+-- CREATE USER TABLE SCRIPT
+
+{% if j2_database_type == 'postgresql' %}
+CREATE TABLE tbl_user
+(
+    id         serial PRIMARY KEY,
+    username   VARCHAR(50)        NOT NULL UNIQUE,
+    first_name VARCHAR(50),
+    last_name  VARCHAR(50),
+    email      VARCHAR(100) UNIQUE,
+    sso_id     INT UNIQUE,
+    is_deleted BOOLEAN            NOT NULL DEFAULT FALSE,
+    is_system  BOOLEAN            NOT NULL DEFAULT FALSE
+);
+
+COMMENT ON TABLE tbl_user IS 'Thông tin người dùng, đồng bộ với SSO';
+COMMENT ON COLUMN tbl_user.id IS 'ID của người dùng';
+COMMENT ON COLUMN tbl_user.first_name IS 'Tên người dùng';
+COMMENT ON COLUMN tbl_user.last_name IS 'Họ, tên đệm người dùng';
+COMMENT ON COLUMN tbl_user.sso_id IS 'ID của người dùng trên SSO';
+COMMENT ON COLUMN tbl_user.is_deleted IS 'Đã xóa hay chưa';
+
+{% elif j2_database_type in ['mysql', 'mariadb'] %}
+CREATE TABLE tbl_user (
+    id         INT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID của người dùng',
+    username   VARCHAR(50) NOT NULL UNIQUE COMMENT 'Tên đăng nhập',
+    first_name VARCHAR(50) COMMENT 'Tên người dùng',
+    last_name  VARCHAR(50) COMMENT 'Họ, tên đệm người dùng',
+    email      VARCHAR(100) UNIQUE COMMENT 'Email người dùng',
+    sso_id     INT UNIQUE COMMENT 'ID của người dùng trên SSO',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Đã xóa hay chưa',
+    is_system  BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Tài khoản hệ thống'
+) COMMENT='Thông tin người dùng, đồng bộ với SSO';
+{% endif %}

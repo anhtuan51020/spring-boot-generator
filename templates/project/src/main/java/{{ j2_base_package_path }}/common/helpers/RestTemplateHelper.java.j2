@@ -1,0 +1,95 @@
+package {{ j2_base_package }}.common.helpers;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class RestTemplateHelper {
+
+    private final RestTemplate restTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    public <T, R> R post(String url, T requestBody, TypeReference<R> responseType) {
+        try {
+            HttpHeaders headers = buildDefaultHeaders();
+            String jsonRequest = objectMapper.writeValueAsString(requestBody);
+            HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            return objectMapper.readValue(response.getBody(), responseType);
+        } catch (Exception ex) {
+            log.error("POST request failed: {}", ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    public <T, R> R post(String url, T requestBody, Class<R> responseType) {
+        try {
+            HttpHeaders headers = buildDefaultHeaders();
+            String jsonRequest = objectMapper.writeValueAsString(requestBody);
+            HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
+
+            ResponseEntity<R> response = restTemplate.postForEntity(url, entity, responseType);
+            return response.getBody();
+        } catch (Exception ex) {
+            log.error("POST request failed: {}", ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    public <R> R get(String url, Map<String, String> queryParams, TypeReference<R> responseType) {
+        try {
+            HttpHeaders headers = buildDefaultHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            String fullUrl = buildUrlWithParams(url, queryParams);
+
+            ResponseEntity<String> response = restTemplate.exchange(fullUrl, HttpMethod.GET, entity, String.class);
+            return objectMapper.readValue(response.getBody(), responseType);
+        } catch (Exception ex) {
+            log.error("GET request failed: {}", ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    public <R> R get(String url, Map<String, String> queryParams, Class<R> responseType) {
+        try {
+            HttpHeaders headers = buildDefaultHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            String fullUrl = buildUrlWithParams(url, queryParams);
+
+            ResponseEntity<R> response = restTemplate.exchange(fullUrl, HttpMethod.GET, entity, responseType);
+            return response.getBody();
+        } catch (Exception ex) {
+            log.error("GET request failed: {}", ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    private HttpHeaders buildDefaultHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("Accept-Charset", StandardCharsets.UTF_8.name());
+        return headers;
+    }
+
+    private String buildUrlWithParams(String url, Map<String, String> params) {
+        if (params == null || params.isEmpty()) return url;
+        StringBuilder builder = new StringBuilder(url).append("?");
+        params.forEach((k, v) -> builder.append(k).append("=").append(v).append("&"));
+        builder.setLength(builder.length() - 1); // remove trailing "&"
+        return builder.toString();
+    }
+}

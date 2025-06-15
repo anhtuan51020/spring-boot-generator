@@ -1,0 +1,17 @@
+package {{ j2_base_package }}.service;
+
+import {{ j2_base_package }}.security.CustomUserDetails;
+
+/**
+ * Service validate token với external SSO server.
+
+ */
+public interface SsoService {
+    /**
+     * Xác thực người dùng với username và password
+     * @param username tên đăng nhập
+     * @param password mật khẩu
+     * @return UserDetails nếu xác thực thành công, null nếu thất bại
+     */
+    CustomUserDetails authenticate(String token);
+}

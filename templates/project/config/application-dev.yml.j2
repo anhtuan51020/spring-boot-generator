@@ -1,17 +1,17 @@
 spring:
   datasource:
     url: {{
-            'jdbc:postgresql://localhost:5432/' + (project_name | replace('-', '_'))
-            if database_type == 'postgresql' else
-            'jdbc:mysql://localhost:3306/' + (project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
-            if database_type == 'mysql' else
-            'jdbc:mariadb://localhost:3306/' + (project_name | replace('-', '_'))
+            'jdbc:postgresql://localhost:5432/' + (j2_project_name | replace('-', '_'))
+            if j2_database_type == 'postgresql' else
+            'jdbc:mysql://localhost:3306/' + (j2_project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
+            if j2_database_type == 'mysql' else
+            'jdbc:mariadb://localhost:3306/' + (j2_project_name | replace('-', '_'))
         }}
-    username: {{ 'admin' if database_type == 'postgresql' else 'root' }}
-    password: {{ 'admin' if database_type == 'postgresql' else 'root' }}
+    username: {{ 'admin' if j2_database_type == 'postgresql' else 'root' }}
+    password: {{ 'admin' if j2_database_type == 'postgresql' else 'root' }}
     driver-class-name: {{
-            'org.postgresql.Driver' if database_type == 'postgresql' else
-            'com.mysql.cj.jdbc.Driver' if database_type == 'mysql' else
+            'org.postgresql.Driver' if j2_database_type == 'postgresql' else
+            'com.mysql.cj.jdbc.Driver' if j2_database_type == 'mysql' else
             'org.mariadb.jdbc.Driver'
         }}
   jpa:

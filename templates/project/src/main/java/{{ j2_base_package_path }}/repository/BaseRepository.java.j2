@@ -1,0 +1,20 @@
+package {{ j2_base_package }}.repository;
+
+import {{ j2_base_package }}.entity.BaseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.NoRepositoryBean;
+import java.io.Serializable;
+
+/**
+ * Base repository interface chứa các phương thức chung cho tất cả các repository.
+ * Các repository cụ thể sẽ kế thừa từ interface này và thêm các phương thức riêng.
+
+ * @version 1.0
+ */
+@NoRepositoryBean
+public interface BaseRepository<T extends BaseEntity, ID extends Serializable> extends JpaRepository<T, ID>, JpaSpecificationExecutor<T> {
+
+}

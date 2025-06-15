@@ -36,10 +36,10 @@ def init_project(verbose: bool):
                 raise typer.Exit(code=1)
 
         context = {
-            "project_name": project_name,
-            "base_package": base_package,
-            "base_package_path": base_package.replace(".", "/"),
-            "database": database
+            "j2_project_name": project_name,
+            "j2_base_package": base_package,
+            "j2_base_package_path": base_package.replace(".", "/"),
+            "j2_database_type": database
         }
 
         generate_project_structure_from_templates(context, verbose)

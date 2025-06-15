@@ -1,0 +1,186 @@
+package {{ j2_base_package }}.common.utils;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.springframework.util.StringUtils;
+
+import java.util.Set;
+import java.util.regex.Pattern;
+
+/**
+ * Utility class cung cấp các phương thức tiện ích để xử lý validation.
+ *
+
+ * @version 1.0
+ */
+public final class ValidationUtil {
+
+    private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    private static final Validator validator = factory.getValidator();
+
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private static final String PHONE_PATTERN = "^\\d{10}$";
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
+    private static final String URL_PATTERN = "^(https?|ftp)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?$";
+    private static final String IPV4_PATTERN = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+    private static final String IPV6_PATTERN = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$";
+
+    private ValidationUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    /**
+     * Validate object với các ràng buộc đã định nghĩa
+          * @param object Object cần validate
+     * @return Set các vi phạm ràng buộc
+     */
+    public static <T> Set<ConstraintViolation<T>> validate(T object) {
+        return validator.validate(object);
+    }
+
+    /**
+     * Kiểm tra xem object có hợp lệ không
+          * @param object Object cần kiểm tra
+     * @return true nếu hợp lệ, false nếu ngược lại
+     */
+    public static <T> boolean isValid(T object) {
+        return validator.validate(object).isEmpty();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là email hợp lệ không
+          * @param email Email cần kiểm tra
+     * @return true nếu là email hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            return false;
+        }
+        return Pattern.compile(EMAIL_PATTERN).matcher(email).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là số điện thoại hợp lệ không
+          * @param phone Số điện thoại cần kiểm tra
+     * @return true nếu là số điện thoại hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidPhone(String phone) {
+        if (!StringUtils.hasText(phone)) {
+            return false;
+        }
+        return Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là mật khẩu hợp lệ không
+          * @param password Mật khẩu cần kiểm tra
+     * @return true nếu là mật khẩu hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidPassword(String password) {
+        if (!StringUtils.hasText(password)) {
+            return false;
+        }
+        return Pattern.compile(PASSWORD_PATTERN).matcher(password).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là URL hợp lệ không
+          * @param url URL cần kiểm tra
+     * @return true nếu là URL hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidUrl(String url) {
+        if (!StringUtils.hasText(url)) {
+            return false;
+        }
+        return Pattern.compile(URL_PATTERN).matcher(url).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là địa chỉ IPv4 hợp lệ không
+          * @param ip IPv4 cần kiểm tra
+     * @return true nếu là IPv4 hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidIPv4(String ip) {
+        if (!StringUtils.hasText(ip)) {
+            return false;
+        }
+        return Pattern.compile(IPV4_PATTERN).matcher(ip).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là địa chỉ IPv6 hợp lệ không
+          * @param ip IPv6 cần kiểm tra
+     * @return true nếu là IPv6 hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidIPv6(String ip) {
+        if (!StringUtils.hasText(ip)) {
+            return false;
+        }
+        return Pattern.compile(IPV6_PATTERN).matcher(ip).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là số nguyên không
+          * @param str Chuỗi cần kiểm tra
+     * @return true nếu là số nguyên, false nếu ngược lại
+     */
+    public static boolean isInteger(String str) {
+        if (!StringUtils.hasText(str)) {
+            return false;
+        }
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là số thực không
+          * @param str Chuỗi cần kiểm tra
+     * @return true nếu là số thực, false nếu ngược lại
+     */
+    public static boolean isDouble(String str) {
+        if (!StringUtils.hasText(str)) {
+            return false;
+        }
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là boolean không
+          * @param str Chuỗi cần kiểm tra
+     * @return true nếu là boolean, false nếu ngược lại
+     */
+    public static boolean isBoolean(String str) {
+        if (!StringUtils.hasText(str)) {
+            return false;
+        }
+        return str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false");
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là ngày tháng hợp lệ không
+          * @param str Chuỗi cần kiểm tra
+     * @return true nếu là ngày tháng hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidDate(String str) {
+        if (!StringUtils.hasText(str)) {
+            return false;
+        }
+        try {
+            DateUtil.parseDate(str);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+} 

@@ -1,0 +1,39 @@
+package {{ j2_base_package }}.security;
+
+import {{ j2_base_package }}.service.SsoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Component;
+
+/**
+ * AuthenticationProvider xử lý xác thực thông qua SSO server.
+ * 
+ * @author tuanna795
+ */
+@Component
+@RequiredArgsConstructor
+public class SsoAuthenticationProvider implements AuthenticationProvider {
+    
+    private final SsoService ssoService;
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        String token = (String) authentication.getCredentials();
+
+        CustomUserDetails userDetails = ssoService.authenticate(token);
+
+        if (userDetails == null) {
+            throw new BadCredentialsException("Invalid SSO token");
+        }
+
+        return new SsoAuthenticationToken(userDetails);
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return SsoAuthenticationToken.class.isAssignableFrom(authentication);
+    }
+}

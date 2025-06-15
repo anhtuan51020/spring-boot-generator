@@ -1,0 +1,78 @@
+package {{ j2_base_package }}.service.impl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import {{ j2_base_package }}.common.helpers.RestTemplateHelper;
+import {{ j2_base_package }}.dto.sso.RpcRequest;
+import {{ j2_base_package }}.security.CustomUserDetails;
+import {{ j2_base_package }}.security.JwtUtil;
+import {{ j2_base_package }}.security.UserDetailsServiceImpl;
+import {{ j2_base_package }}.service.SsoService;
+import io.micrometer.common.util.StringUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+/**
+ * Triển khai SsoService gọi HTTP tới SSO server để validate token.
+
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class SsoServiceImpl implements SsoService {
+
+    @Value("${app.sso.rpc-url}")
+    private String ssoRpcUrl;
+
+    private final RestTemplateHelper restTemplateHelper;
+
+    private final UserDetailsServiceImpl userDetailsService;
+
+    private final JwtUtil jwtUtil;
+
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public CustomUserDetails authenticate(String token) {
+        Boolean isValidToken = isValidToken(token);
+
+        if (!isValidToken) {
+            return null;
+        }
+
+        String usernameFromToken = jwtUtil.extractUsernameFromToken(token);
+
+        return userDetailsService.loadUserByUsername(usernameFromToken);
+    }
+
+    private Boolean isValidToken(String token) {
+
+        if (StringUtils.isBlank(token)) {
+            return false;
+        }
+
+        RpcRequest rpcRequest = RpcRequest.createRequestFromToken(
+                "sso.check_sso_session",
+                token,
+                objectMapper
+        );
+
+        try {
+            String response = restTemplateHelper.post(ssoRpcUrl, rpcRequest, String.class);
+            return getResultFromResponseStr(response);
+        } catch (Exception ex) {
+            log.error("Error calling RPC post", ex);
+            return false;
+        }
+    }
+
+    private boolean getResultFromResponseStr(String responseStr) {
+        Gson gson = new Gson();
+        JsonObject object = gson.fromJson(responseStr, JsonObject.class);
+        String result = object.get("result").toString();
+        return Boolean.parseBoolean(result);
+    }
+} 
