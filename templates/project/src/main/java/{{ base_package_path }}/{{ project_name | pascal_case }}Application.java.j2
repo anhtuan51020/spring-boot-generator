@@ -15,10 +15,10 @@ import java.net.InetAddress;
 @EnableTransactionManagement
 @EnableAsync
 @EnableScheduling
-public class {{ projectName | pascal_case }}Application {
+public class {{ project_name | pascal_case }}Application {
 
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication({{ projectName | pascal_case }}Application.class);
+        SpringApplication app = new SpringApplication({{ project_name | pascal_case }}Application.class);
         app.addListeners((ApplicationListener<ApplicationReadyEvent>) event -> {
             Environment env = event.getApplicationContext().getEnvironment();
             try {
@@ -29,7 +29,7 @@ public class {{ projectName | pascal_case }}Application {
                 String activeProfiles = String.join(", ", env.getActiveProfiles());
 
                 System.out.println("\n----------------------------------------------------------");
-                System.out.println("  🚀 {{ projectName | upper }} Application is UP and RUNNING!");
+                System.out.println("  🚀 {{ project_name | upper }} Application is UP and RUNNING!");
                 System.out.println("  📦  Active Profiles: " + (activeProfiles.isEmpty() ? "default" : activeProfiles));
                 System.out.println("  🌐  Local:          " + protocol + "://localhost:" + serverPort + contextPath);
                 System.out.println("  🌍  External:       " + protocol + "://" + hostAddress + ":" + serverPort + contextPath);

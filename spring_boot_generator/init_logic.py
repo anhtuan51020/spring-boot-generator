@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 import questionary
 import typer
@@ -8,13 +9,15 @@ def init_project(verbose: bool):
     print("\n🚀 Spring Boot Project Generator - Initialization Wizard\n")
 
     try:
-        project_name = questionary.text("Tên project (ví dụ: mdm-backend)?").ask()
-        if project_name is None:
-            raise typer.Exit(code=1)
+        project_name = questionary.text("Tên project (ví dụ: spring-boot-example)?").ask()
+        if not project_name:
+            project_name = "spring-boot-example"
 
-        base_package = questionary.text("Package gốc (ví dụ: com.mdm)?").ask()
-        if base_package is None:
-            raise typer.Exit(code=1)
+        default_package = f"com.{re.sub(r'[^a-zA-Z0-9]', '', project_name)}"
+
+        base_package = questionary.text(f"Package gốc (ví dụ: {default_package})?").ask()
+        if not base_package:
+            base_package = default_package
 
         database = questionary.select(
             "Chọn loại database:",

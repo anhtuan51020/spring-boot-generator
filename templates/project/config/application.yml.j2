@@ -1,0 +1,150 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  application:
+    name: {{ project_name }}
+  datasource:
+    jdbc-url: {{
+                'jdbc:postgresql://localhost:5432/' + (project_name | replace('-', '_'))
+                if database_type == 'postgresql' else
+                'jdbc:mysql://localhost:3306/' + (project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
+                if database_type == 'mysql' else
+                'jdbc:mariadb://localhost:3306/' + (project_name | replace('-', '_'))
+            }}
+    username: ${SPRING_DATASOURCE_USERNAME:{{ 'postgres' if database_type == 'postgresql' else 'root' }}}
+    password: ${SPRING_DATASOURCE_PASSWORD:{{ 'postgres' if database_type == 'postgresql' else 'root' }}}
+    driver-class-name: {{
+                'org.postgresql.Driver' if database_type == 'postgresql' else
+                'com.mysql.cj.jdbc.Driver' if database_type == 'mysql' else
+                'org.mariadb.jdbc.Driver'
+            }}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=600s
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SSO_ISSUER_URI:http://localhost:8080/auth/realms/master}
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: public
+    table: flyway_schema_history
+    validate-on-migrate: true
+    out-of-order: false
+    ignore-migration-patterns: "*:missing"
+    url: ${spring.datasource.jdbc-url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    driver-class-name: ${spring.datasource.driver-class-name}
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    com.{{ project_package }}: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    io.micrometer: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/{{ project_name }}.log}
+    max-size: 10MB
+    max-history: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,configprops,threaddump,heapdump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: db,diskSpace
+        liveness:
+          include: ping
+    metrics:
+      enabled: true
+      prometheus:
+        enabled: true
+      env:
+        show-values: always
+      configprops:
+        show-values: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 10ms, 50ms, 100ms, 200ms, 500ms
+    enable:
+      jvm: true
+      process: true
+      system: true
+      logback: true
+      tomcat: true
+      http: true
+      hibernate: true
+      jdbc: true
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:your-256-bit-secret-key-here-must-be-at-least-32-characters}
+      expiration: ${JWT_EXPIRATION:86400000}
+      header: Authorization
+      prefix: Bearer
+  sso:
+    url: ${SSO_URL:http://localhost:8080/auth}
+    realm: ${SSO_REALM:master}
+    client-id: ${SSO_CLIENT_ID:{{ project_name }}}
+  database:
+    batch-size: 1000
+    max-batch-size: 10000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+  packages-to-scan: com.{{ project_package }}.controller

@@ -1,0 +1,38 @@
+package {{ base_package }}.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.Comment;
+
+@Data
+@Schema(description = "Thông tin người dùng")
+public class UserDTO {
+
+    private Integer id;
+
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(max = 50, message = "Tên đăng nhập không được vượt quá 50 ký tự")
+    @Schema(description = "Tên đăng nhập", example = "john.doe")
+    private String username;
+
+    @Size(max = 50, message = "Tên không được vượt quá 50 ký tự")
+    @Schema(description = "Tên người dùng", example = "John")
+    private String firstName;
+
+    @Size(max = 50, message = "Họ không được vượt quá 50 ký tự")
+    @Schema(description = "Họ và tên đệm", example = "Doe")
+    private String lastName;
+
+    @Email(message = "Email không hợp lệ")
+    @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
+    @Schema(description = "Email người dùng", example = "john.doe@example.com")
+    private String email;
+
+    @Schema(description = "ID người dùng trên SSO", example = "12345")
+    private Integer ssoId;
+}

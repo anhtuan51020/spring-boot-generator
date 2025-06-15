@@ -1,0 +1,10 @@
+package {{ base_package }}.mapper;
+
+import {{ base_package }}.dto.UserDTO;
+import {{ base_package }}.entity.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UserMapper extends BaseMapper<UserDTO, User> {
+}

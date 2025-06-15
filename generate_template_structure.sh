@@ -27,7 +27,6 @@ DIRS=(
   "$TEMPLATES_DIR/src/main/java/$PACKAGE_PATH/repository"
   "$TEMPLATES_DIR/src/main/java/$PACKAGE_PATH/security"
   "$TEMPLATES_DIR/src/main/java/$PACKAGE_PATH/util"
-  "$TEMPLATES_DIR/src/main/resources/db/init"
   "$TEMPLATES_DIR/src/main/resources/db/migration"
   "$TEMPLATES_DIR/src/test/java/$PACKAGE_PATH"
   "$TEMPLATES_DIR/src/test/resource"
@@ -48,8 +47,7 @@ touch "$TEMPLATES_DIR/config/application-dev.yml.j2"
 touch "$TEMPLATES_DIR/config/application-prod.yml.j2"
 touch "$TEMPLATES_DIR/config/application-test.yml.j2"
 
-touch "$TEMPLATES_DIR/logs/mdm-backend.log.j2"
-touch "$TEMPLATES_DIR/logs/metrics.log.j2"
+touch "$TEMPLATES_DIR/logs"
 
 touch "$TEMPLATES_DIR/src/main/java/$PACKAGE_PATH/MdmBackendApplication.java.j2"
 touch "$TEMPLATES_DIR/src/main/java/$PACKAGE_PATH/controller/BaseController.java.j2"

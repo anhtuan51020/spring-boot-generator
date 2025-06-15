@@ -1,0 +1,59 @@
+package {{ base_package }}.mapper;
+
+import org.mapstruct.BeanMapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
+import java.util.List;
+
+/**
+ * Base mapper interface chứa các phương thức chung cho tất cả các mapper.
+ * Các mapper cụ thể sẽ kế thừa từ interface này và thêm các phương thức riêng.
+
+ * @version 1.0
+ */
+public interface BaseMapper<D, E> {
+
+    /**
+     * Chuyển đổi từ Request DTO sang Entity
+     *
+     * @param dto Request DTO
+     * @return Entity
+     */
+    E toEntity(D dto);
+
+    /**
+     * Chuyển đổi từ Entity sang Response DTO
+     *
+     * @param entity Entity
+     * @return Response DTO
+     */
+    D toDto(E entity);
+
+    /**
+     * Chuyển đổi từ danh sách Request DTO sang danh sách Entity
+     *
+     * @param dtoList danh sách Request DTO
+     * @return danh sách Entity
+     */
+    List<E> toEntity(List<D> dtoList);
+
+    /**
+     * Chuyển đổi từ danh sách Entity sang danh sách Response DTO
+     *
+     * @param entityList danh sách Entity
+     * @return danh sách Response DTO
+     */
+    List<D> toDto(List<E> entityList);
+
+    /**
+     * Cập nhật Entity từ Request DTO
+     *
+     * @param entity Entity cần cập nhật
+     * @param dto Request DTO chứa dữ liệu cập nhật
+     */
+    @Named("partialUpdate")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void partialUpdate(@MappingTarget E entity, D dto);
+}

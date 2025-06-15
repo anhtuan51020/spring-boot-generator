@@ -1,0 +1,147 @@
+package {{ base_package }}.common.utils;
+
+import org.springframework.util.StringUtils;
+
+import java.util.UUID;
+import java.util.regex.Pattern;
+
+/**
+ * Utility class cung cấp các phương thức tiện ích để xử lý chuỗi.
+ *
+
+ * @version 1.0
+ */
+public final class StringUtil {
+
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private static final String PHONE_PATTERN = "^\\d{10}$";
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
+
+    private StringUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là email hợp lệ không
+          * @param email Email cần kiểm tra
+     * @return true nếu là email hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            return false;
+        }
+        return Pattern.compile(EMAIL_PATTERN).matcher(email).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là số điện thoại hợp lệ không
+          * @param phone Số điện thoại cần kiểm tra
+     * @return true nếu là số điện thoại hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidPhone(String phone) {
+        if (!StringUtils.hasText(phone)) {
+            return false;
+        }
+        return Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có phải là mật khẩu hợp lệ không
+     * Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
+          * @param password Mật khẩu cần kiểm tra
+     * @return true nếu là mật khẩu hợp lệ, false nếu ngược lại
+     */
+    public static boolean isValidPassword(String password) {
+        if (!StringUtils.hasText(password)) {
+            return false;
+        }
+        return Pattern.compile(PASSWORD_PATTERN).matcher(password).matches();
+    }
+
+    /**
+     * Tạo chuỗi ngẫu nhiên với độ dài cho trước
+          * @param length Độ dài của chuỗi cần tạo
+     * @return Chuỗi ngẫu nhiên
+     */
+    public static String generateRandomString(int length) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Length must be positive");
+        }
+        return UUID.randomUUID().toString().replace("-", "").substring(0, length);
+    }
+
+    /**
+     * Chuyển đổi chuỗi thành camelCase
+          * @param input Chuỗi cần chuyển đổi
+     * @return Chuỗi dạng camelCase
+     */
+    public static String toCamelCase(String input) {
+        if (!StringUtils.hasText(input)) {
+            return input;
+        }
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = false;
+        for (char c : input.toCharArray()) {
+            if (c == '_' || c == ' ') {
+                capitalizeNext = true;
+            } else {
+                if (capitalizeNext) {
+                    result.append(Character.toUpperCase(c));
+                    capitalizeNext = false;
+                } else {
+                    result.append(Character.toLowerCase(c));
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Chuyển đổi chuỗi thành snake_case
+          * @param input Chuỗi cần chuyển đổi
+     * @return Chuỗi dạng snake_case
+     */
+    public static String toSnakeCase(String input) {
+        if (!StringUtils.hasText(input)) {
+            return input;
+        }
+        return input.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+    }
+
+    /**
+     * Chuyển đổi chuỗi thành PascalCase
+          * @param input Chuỗi cần chuyển đổi
+     * @return Chuỗi dạng PascalCase
+     */
+    public static String toPascalCase(String input) {
+        if (!StringUtils.hasText(input)) {
+            return input;
+        }
+        String camelCase = toCamelCase(input);
+        return Character.toUpperCase(camelCase.charAt(0)) + camelCase.substring(1);
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có chứa ký tự đặc biệt không
+          * @param input Chuỗi cần kiểm tra
+     * @return true nếu chứa ký tự đặc biệt, false nếu ngược lại
+     */
+    public static boolean containsSpecialCharacter(String input) {
+        if (!StringUtils.hasText(input)) {
+            return false;
+        }
+        return !input.matches("[a-zA-Z0-9\\s]*");
+    }
+
+    /**
+     * Loại bỏ các ký tự đặc biệt khỏi chuỗi
+          * @param input Chuỗi cần xử lý
+     * @return Chuỗi đã loại bỏ ký tự đặc biệt
+     */
+    public static String removeSpecialCharacters(String input) {
+        if (!StringUtils.hasText(input)) {
+            return input;
+        }
+        return input.replaceAll("[^a-zA-Z0-9\\s]", "");
+    }
+} 

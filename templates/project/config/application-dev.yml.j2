@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: {{
+            'jdbc:postgresql://localhost:5432/' + (project_name | replace('-', '_'))
+            if database_type == 'postgresql' else
+            'jdbc:mysql://localhost:3306/' + (project_name | replace('-', '_')) + '?useSSL=false&serverTimezone=UTC'
+            if database_type == 'mysql' else
+            'jdbc:mariadb://localhost:3306/' + (project_name | replace('-', '_'))
+        }}
+    username: {{ 'admin' if database_type == 'postgresql' else 'root' }}
+    password: {{ 'admin' if database_type == 'postgresql' else 'root' }}
+    driver-class-name: {{
+            'org.postgresql.Driver' if database_type == 'postgresql' else
+            'com.mysql.cj.jdbc.Driver' if database_type == 'mysql' else
+            'org.mariadb.jdbc.Driver'
+        }}
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+
+app:
+  security:
+    jwt:
+      secret: {{ jwt_secret | default('your-256-bit-secret-key-here') }}
+  sso:
+    rpc-url: {{ sso_rpc_url | default('http://localhost:8000/rpc') }}

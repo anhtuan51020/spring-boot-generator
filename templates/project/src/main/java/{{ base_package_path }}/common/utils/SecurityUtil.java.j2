@@ -1,0 +1,187 @@
+package {{ base_package }}.common.utils;
+
+import {{ base_package }}.dto.UserDTO;
+import {{ base_package }}.security.CustomUserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Optional;
+
+/**
+ * Utility class cung cấp các phương thức tiện ích để xử lý bảo mật.
+ *
+
+ * @version 1.0
+ */
+public final class SecurityUtil {
+
+    private static final PasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
+    private static final String ALGORITHM = "AES";
+    private static final int KEY_SIZE = 256;
+    private static final String SECRET_KEY = "MDM_SECRET_KEY_2024"; // Nên được cấu hình trong file properties
+
+    private SecurityUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    /**
+     * Mã hóa mật khẩu
+          * @param password Mật khẩu cần mã hóa
+     * @return Mật khẩu đã mã hóa
+     */
+    public static String encodePassword(String password) {
+        return PASSWORD_ENCODER.encode(password);
+    }
+
+    /**
+     * Kiểm tra mật khẩu
+          * @param rawPassword Mật khẩu gốc
+     * @param encodedPassword Mật khẩu đã mã hóa
+     * @return true nếu mật khẩu khớp, false nếu ngược lại
+     */
+    public static boolean matchesPassword(String rawPassword, String encodedPassword) {
+        return PASSWORD_ENCODER.matches(rawPassword, encodedPassword);
+    }
+
+    /**
+     * Tạo khóa AES
+          * @return Khóa AES dưới dạng chuỗi Base64
+     * @throws NoSuchAlgorithmException nếu thuật toán không được hỗ trợ
+     */
+    public static String generateAESKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
+        keyGen.init(KEY_SIZE, new SecureRandom());
+        SecretKey secretKey = keyGen.generateKey();
+        return Base64.getEncoder().encodeToString(secretKey.getEncoded());
+    }
+
+    /**
+     * Mã hóa dữ liệu bằng AES
+          * @param data Dữ liệu cần mã hóa
+     * @return Dữ liệu đã mã hóa dưới dạng chuỗi Base64
+     * @throws Exception nếu có lỗi khi mã hóa
+     */
+    public static String encryptAES(String data) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedBytes = cipher.doFinal(data.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    /**
+     * Giải mã dữ liệu đã mã hóa bằng AES
+          * @param encryptedData Dữ liệu đã mã hóa dưới dạng chuỗi Base64
+     * @return Dữ liệu đã giải mã
+     * @throws Exception nếu có lỗi khi giải mã
+     */
+    public static String decryptAES(String encryptedData) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        return new String(decryptedBytes);
+    }
+
+    /**
+     * Tạo token ngẫu nhiên
+          * @param length Độ dài của token
+     * @return Token ngẫu nhiên
+     */
+    public static String generateToken(int length) {
+        byte[] randomBytes = new byte[length];
+        new SecureRandom().nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    /**
+     * Tạo mã xác thực ngẫu nhiên
+          * @param length Độ dài của mã
+     * @return Mã xác thực ngẫu nhiên
+     */
+    public static String generateVerificationCode(int length) {
+        StringBuilder code = new StringBuilder();
+        SecureRandom random = new SecureRandom();
+        for (int i = 0; i < length; i++) {
+            code.append(random.nextInt(10));
+        }
+        return code.toString();
+    }
+
+    /**
+     * Tạo salt ngẫu nhiên
+          * @param length Độ dài của salt
+     * @return Salt ngẫu nhiên
+     */
+    public static String generateSalt(int length) {
+        byte[] salt = new byte[length];
+        new SecureRandom().nextBytes(salt);
+        return Base64.getEncoder().encodeToString(salt);
+    }
+
+    /**
+     * Mã hóa dữ liệu với salt
+          * @param data Dữ liệu cần mã hóa
+     * @param salt Salt để mã hóa
+     * @return Dữ liệu đã mã hóa
+     */
+    public static String hashWithSalt(String data, String salt) {
+        return PASSWORD_ENCODER.encode(data + salt);
+    }
+
+    /**
+     * Kiểm tra dữ liệu với salt
+          * @param data Dữ liệu cần kiểm tra
+     * @param salt Salt đã sử dụng
+     * @param hashedData Dữ liệu đã mã hóa
+     * @return true nếu dữ liệu khớp, false nếu ngược lại
+     */
+    public static boolean verifyWithSalt(String data, String salt, String hashedData) {
+        return PASSWORD_ENCODER.matches(data + salt, hashedData);
+    }
+
+    /**
+     * Lấy username của người dùng hiện tại từ SecurityContextHolder
+          * @return username hoặc null nếu chưa đăng nhập
+     */
+    public static String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else if (principal instanceof String) {
+            return (String) principal;
+        }
+        return null;
+    }
+
+    /**
+     * Lấy đối tượng UserDetails của người dùng hiện tại
+          * @return UserDetails hoặc null nếu chưa đăng nhập
+     */
+    public static Optional<UserDTO> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            return Optional.ofNullable(((CustomUserDetails) principal).getUserDTO());
+        }
+        return Optional.empty();
+    }
+} 

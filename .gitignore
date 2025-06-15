@@ -45,7 +45,8 @@ Thumbs.db
 *.log
 
 # Personal/local scripts
-install.sh
+generate_template_structure.sh
+
 # Others
 *.bak
 *.swp

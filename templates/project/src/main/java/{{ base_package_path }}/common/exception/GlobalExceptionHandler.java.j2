@@ -1,0 +1,127 @@
+package {{ base_package }}.common.exception;
+
+import {{ base_package }}.common.response.ApiResponseWrapper;
+import {{ base_package }}.common.response.ErrorResponse;
+import jakarta.validation.ConstraintViolationException;
+import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private ErrorResponse buildErrorResponse(HttpStatus status, String message, Map<String, String> details, Exception ex) {
+        String traceId = MDC.get("traceId");
+        String errorCode = ErrorCodeGenerator.generate();
+
+        // Log exception có kiểm soát
+        if (status.is5xxServerError()) {
+            log.error("Lỗi [{} - {}]: {}", traceId, errorCode, ex.toString(), ex);
+        } else {
+            log.warn("Lỗi [{} - {}]: {}", traceId, errorCode, message, ex);
+        }
+
+        return new ErrorResponse(
+                errorCode,
+                traceId,
+                ex.getMessage(),
+                details,
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleNotFound(NoHandlerFoundException ex) {
+        String message = "Đường dẫn không tồn tại: " + ex.getRequestURL();
+        return wrap(HttpStatus.NOT_FOUND, message, null, ex);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        return wrap(HttpStatus.METHOD_NOT_ALLOWED, "Phương thức HTTP không được hỗ trợ", null, ex);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        return wrap(HttpStatus.BAD_REQUEST, "Dữ liệu không hợp lệ", fieldErrors, ex);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> violations = new HashMap<>();
+        ex.getConstraintViolations().forEach(v -> {
+            String field = v.getPropertyPath().toString();
+            violations.put(field, v.getMessage());
+        });
+        return wrap(HttpStatus.BAD_REQUEST, "Dữ liệu không hợp lệ", violations, ex);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleMissingParam(MissingServletRequestParameterException ex) {
+        return wrap(HttpStatus.BAD_REQUEST, "Thiếu tham số: " + ex.getParameterName(), null, ex);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleAuthentication(AuthenticationException ex) {
+        return wrap(HttpStatus.UNAUTHORIZED, "Chưa xác thực hoặc token không hợp lệ", null, ex);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleAccessDenied(AccessDeniedException ex) {
+        return wrap(HttpStatus.FORBIDDEN, "Không có quyền truy cập tài nguyên này", null, ex);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponseWrapper<ErrorResponse>> handleGeneralException(Exception ex) {
+        return wrap(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống. Vui lòng liên hệ hỗ trợ", null, ex);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "Dữ liệu đã tồn tại. Vui lòng kiểm tra và thử lại.";
+
+        // Kiểm tra chi tiết lỗi để đưa ra message cụ thể hơn
+        if (ex.getCause() != null && ex.getCause().getMessage() != null) {
+            String causeMsg = ex.getCause().getMessage();
+            if (causeMsg.contains("tbl_database_connection_name_key")) {
+                message = "Tên cấu hình kết nối đã tồn tại. Vui lòng chọn tên khác.";
+            }
+        }
+
+        return wrap(HttpStatus.CONFLICT, message, null, ex);
+    }
+
+    private ResponseEntity<ApiResponseWrapper<ErrorResponse>> wrap(HttpStatus status, String message, Map<String, String> details, Exception ex) {
+        ErrorResponse errorResponse = buildErrorResponse(status, message, details, ex);
+        ApiResponseWrapper<ErrorResponse> wrapper = new ApiResponseWrapper<>(
+                status.value(),
+                message,
+                errorResponse
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(wrapper);
+    }
+}
