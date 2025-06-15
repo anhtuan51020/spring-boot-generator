@@ -1,0 +1,75 @@
+package {{ base_package }}.config;
+
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Cấu hình datasource, transaction, multi-database cho hệ thống.
+
+ */
+@Configuration
+public class DatabaseConfig {
+
+    /**
+     * DataSource cho metadata database (chính)
+     */
+    @Bean
+    @Primary
+    @ConfigurationProperties(prefix = "spring.datasource")
+    public DataSource metadataDataSource() {
+        return new HikariDataSource();
+    }
+
+    /**
+     * JdbcTemplate cho metadata database
+     */
+    @Bean
+    @Primary
+    public JdbcTemplate metadataJdbcTemplate(DataSource metadataDataSource) {
+        return new JdbcTemplate(metadataDataSource);
+    }
+
+    /**
+     * NamedParameterJdbcTemplate cho metadata database
+     */
+    @Bean
+    @Primary
+    public NamedParameterJdbcTemplate metadataNamedParameterJdbcTemplate(DataSource metadataDataSource) {
+        return new NamedParameterJdbcTemplate(metadataDataSource);
+    }
+
+    /**
+     * Map lưu các physical DataSource (database vật lý)
+     */
+    @Bean
+    public Map<Integer, DataSource> physicalDataSources() {
+        return new HashMap<>();
+    }
+
+    /**
+     * Map lưu các physical JdbcTemplate
+     */
+    @Bean
+    public Map<Integer, JdbcTemplate> physicalJdbcTemplates() {
+        return new HashMap<>();
+    }
+
+    /**
+     * Map lưu các physical NamedParameterJdbcTemplate
+     */
+    @Bean
+    public Map<Integer, NamedParameterJdbcTemplate> physicalNamedParameterJdbcTemplates() {
+        return new HashMap<>();
+    }
+} 

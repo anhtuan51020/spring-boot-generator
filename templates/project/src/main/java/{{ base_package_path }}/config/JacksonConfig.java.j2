@@ -1,0 +1,33 @@
+package {{ base_package }}.config;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class JacksonConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Bỏ qua các trường không tồn tại trong JSON input
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        // Không serialize ngày giờ dưới dạng timestamp mà dùng ISO 8601
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        // Không serialize các trường có giá trị null
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        // Tên thuộc tính theo chuẩn camelCase
+        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
+
+        // Hỗ trợ Java 8 date/time API (LocalDate, LocalDateTime, ZonedDateTime)
+        mapper.registerModule(new JavaTimeModule());
+
+        return mapper;
+    }
+}
