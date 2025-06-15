@@ -1,0 +1,60 @@
+package {{ j2_base_package }}.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.SQLRestriction;
+
+{% if referenced_by|length > 0 %}
+import java.util.List;
+{% endif %}
+
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = "{{ table_name }}")
+@Comment("{{ comment }}")
+@Data
+{% if has_is_deleted %}
+@SQLRestriction("is_deleted = false")
+{% endif %}
+public class {{ class_name }} extends BaseEntity {
+{% set fk_columns = foreign_keys | map(attribute='column') | list %}
+
+{% for field in fields if field.name not in ['id', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'] and field.original_name not in fk_columns %}
+{% if field.comment %}
+    @Comment("{{ field.comment }}")
+{% endif %}
+{% set column_args = [] %}
+{% set _ = column_args.append('name = "' ~ field.original_name ~ '"') %}
+{% if field.length %}
+{% set _ = column_args.append('length = ' ~ field.length) %}
+{% endif %}
+{% if field.unique %}
+{% set _ = column_args.append('unique = true') %}
+{% endif %}
+{% if field.nullable is not sameas true %}
+{% set _ = column_args.append('nullable = false') %}
+{% endif %}
+{% if field.column_definition %}
+{% set _ = column_args.append('columnDefinition = "' ~ field.column_definition ~ '"') %}
+{% endif %}
+{% if column_args | length == 1 %}
+    @Column({{ column_args[0] }})
+{% else %}
+    @Column({{ column_args | join(', ') }})
+{% endif %}
+    private {{ field.type }} {{ field.name }};
+
+{% endfor %}
+{% for fk in foreign_keys if from_column_name_to_java_field_name(fk.column) not in ['createdBy', 'lastModifiedBy'] %}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "{{ fk.column }}")
+    private {{ fk.target_class }} {{ from_column_name_to_java_field_name(fk.column | replace('_id', '')) }};
+
+{% endfor %}
+{% for ref in referenced_by %}
+    @OneToMany(mappedBy = "{{ ref.source_field }}", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<{{ ref.source_class }}> {{ ref.field_name }};
+
+{% endfor %}
+}

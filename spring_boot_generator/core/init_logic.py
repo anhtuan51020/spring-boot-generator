@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 import questionary
 import typer
-from spring_boot_generator.template_engine import generate_project_structure_from_templates
+from spring_boot_generator.core.template_engine import generate_project_structure_from_templates
 
 
 def init_project(verbose: bool):

@@ -1,0 +1,33 @@
+package {{ j2_base_package }}.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "{{ comment }}")
+public class {{ class_name }}DTO extends BaseDTO {
+
+{% set fk_columns = foreign_keys | map(attribute='column') | list %}
+{% for field in fields if field.name not in ['id', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'] and field.original_name not in fk_columns %}
+{% if not field.nullable %}
+    {% if field.type == "String" %}
+    @NotBlank
+    {% else %}
+    @NotNull
+    {% endif %}
+{% endif %}
+{% if field.type == "String" and field.length %}
+    @Size(max = {{ field.length }})
+{% endif %}
+    @Schema(description = "{{ field.comment or field.name }}")
+    private {{ field.type }} {{ field.name }};
+
+{% endfor %}
+{% for fk in foreign_keys if from_column_name_to_java_field_name(fk.column) not in ['createdBy', 'lastModifiedBy'] %}
+    private {{ fk.target_class }}DTO {{ from_column_name_to_java_field_name(fk.column | replace('_id', '')) }}DTO;
+
+{% endfor %}
+}

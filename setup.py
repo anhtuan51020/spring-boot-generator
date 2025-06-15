@@ -9,7 +9,9 @@ setup(
         'click==8.1.3',
         'jinja2==3.1.2',
         'questionary'
-        'typer'
+        'typer',
+        'sqlparse',
+        'sqlglot'
     ],
     entry_points={
         'console_scripts': [

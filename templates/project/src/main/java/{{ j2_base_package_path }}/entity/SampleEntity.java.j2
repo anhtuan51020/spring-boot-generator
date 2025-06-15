@@ -1,0 +1,35 @@
+package {{ j2_base_package }}.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "{{ table.name }}")
+@Comment("{{ table.comment }}")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class {{ table.class_name }} extends BaseEntity {
+
+{% for column in table.columns %}
+    {% if column.is_enum %}
+    @Enumerated(EnumType.STRING)
+    {% endif %}
+    {% if column.comment %}
+    @Comment("{{ column.comment }}")
+    {% endif %}
+    @Column(name = "{{ column.name }}"{% if not column.nullable %}, nullable = false{% endif %})
+    private {{ column.java_type }} {{ column.field_name }};
+{% endfor %}
+
+{% for fk in table.foreign_keys %}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "{{ fk.column }}")
+    private {{ fk.target_class }} {{ fk.field_name }};
+{% endfor %}
+
+{% for ref in table.one_to_many_refs %}
+    @OneToMany(mappedBy = "{{ ref.mapped_by }}", cascade = CascadeType.ALL)
+    private List<{{ ref.target_class }}> {{ ref.field_name }};
+{% endfor %}
+}

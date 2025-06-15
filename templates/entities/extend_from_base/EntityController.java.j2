@@ -1,0 +1,22 @@
+package {{ j2_base_package }}.controller;
+
+import {{ j2_base_package }}.dto.{{ class_name }}DTO;
+import {{ j2_base_package }}.entity.{{ class_name }};
+import {{ j2_base_package }}.service.{{ class_name }}Service;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("{{ request_path }}")
+@RequiredArgsConstructor
+@Tag(name = "{{ class_name | replace('_', ' ') | title }}", description = "API quản lý {{ class_name | replace('_', ' ') | lower }}")
+public class {{ class_name }}Controller extends BaseController<{{ class_name }}, {{ id_type }}, {{ class_name }}DTO> {
+    private final {{ class_name }}Service service;
+
+    @Override
+    protected {{ class_name }}Service getService() {
+        return service;
+    }
+}

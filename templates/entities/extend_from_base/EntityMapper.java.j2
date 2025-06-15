@@ -1,0 +1,26 @@
+package {{ j2_base_package }}.mapper;
+
+import {{ j2_base_package }}.dto.{{ class_name }}DTO;
+import {{ j2_base_package }}.entity.{{ class_name }};
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+{% set unique_mappers = {} %}
+{% for fk in foreign_keys %}
+    {% set mapper_class = fk.target_class + 'Mapper' %}
+    {% if mapper_class not in unique_mappers %}
+        {% set _ = unique_mappers.update({mapper_class: dto_class}) %}
+    {% endif %}
+{% endfor %}
+@Mapper(
+    componentModel = "spring",
+    unmappedTargetPolicy = ReportingPolicy.IGNORE{% if unique_mappers %},
+    uses = {
+{%- for mapper_class in unique_mappers.keys() %}
+    {{ mapper_class }}.class{{ "," if not loop.last }}
+{%- endfor %}
+    }
+{% endif %}
+)
+public interface {{ class_name }}Mapper extends BaseMapper<{{ class_name }}DTO, {{ class_name }}> {
+}

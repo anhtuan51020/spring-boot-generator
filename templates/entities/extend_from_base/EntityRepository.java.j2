@@ -1,0 +1,8 @@
+package {{ j2_base_package }}.repository;
+
+import {{ j2_base_package }}.entity.{{ class_name }};
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface {{ class_name }}Repository extends BaseRepository<{{ class_name }}, {{ id_type }}> {
+}

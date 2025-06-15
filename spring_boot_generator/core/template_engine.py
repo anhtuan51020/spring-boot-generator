@@ -3,14 +3,22 @@ import typer
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Template
 
+from spring_boot_generator.generators.sql_mapper import from_column_name_to_java_field_name
+
 app = typer.Typer()
 
 def pascal_case(s):
     return ''.join(word.capitalize() for word in s.replace('-', ' ').replace('_', ' ').split())
 
 def get_jinja_env(path: Path):
-    env = Environment(loader=FileSystemLoader(str(path)))
+    env = Environment(
+        loader=FileSystemLoader(str(path.resolve())),  # đảm bảo path tuyệt đối
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
     env.filters['pascal_case'] = pascal_case
+    env.filters['from_column_name_to_java_field_name'] = from_column_name_to_java_field_name
+    env.globals['from_column_name_to_java_field_name'] = from_column_name_to_java_field_name
     return env
 
 def render_template_file(template_path, context, output_path, verbose: bool = False):

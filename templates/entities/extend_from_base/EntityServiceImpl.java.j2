@@ -1,0 +1,28 @@
+package {{ j2_base_package }}.service.impl;
+
+import {{ j2_base_package }}.dto.{{ class_name }}DTO;
+import {{ j2_base_package }}.entity.{{ class_name }};
+import {{ j2_base_package }}.mapper.{{ class_name }}Mapper;
+import {{ j2_base_package }}.repository.{{ class_name }}Repository;
+import {{ j2_base_package }}.service.{{ class_name }}Service;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class {{ class_name }}ServiceImpl extends BaseServiceImpl<{{ class_name }}, {{ id_type }}, {{ class_name }}DTO> implements {{ class_name }}Service {
+    private final {{ class_name }}Repository repository;
+    private final {{ class_name }}Mapper mapper;
+
+    @Override
+    protected {{ class_name }}Repository getRepository() {
+        return repository;
+    }
+
+    @Override
+    protected {{ class_name }}Mapper getMapper() {
+        return mapper;
+    }
+}

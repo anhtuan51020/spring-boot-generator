@@ -1,5 +1,7 @@
 import typer
-from spring_boot_generator.init_logic import init_project
+
+from spring_boot_generator.commands.generate_entity import register as register_generate
+from spring_boot_generator.core.init_logic import init_project
 
 app = typer.Typer(help="Spring Boot Project Generator CLI")
 
@@ -16,3 +18,5 @@ def new_project(
 def show_version():
     """🔖 Hiển thị thông tin phiên bản của công cụ"""
     typer.echo("📦 Spring Boot Generator v1.0.0")
+
+register_generate(app)
